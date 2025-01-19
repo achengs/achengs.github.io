@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="https://clojurescript.org/images/cljs-logo-icon-32.png">
+    <link rel=stylesheet href="./cm/doc/docs.css">
+    <link rel="stylesheet" href="./cm/lib/codemirror.css">
+    <script src="./cm/lib/codemirror.js"></script>
+    <script src="./cm/mode/clojure/clojure.js"></script>
+    <script src="./cm/keymap/emacs.js"></script>
+    <!-- KEEP THIS SCRIPT TAG : IT LOADS YOUR APPLICATION CODE -->
+    <script src="cljs-out/dev/main_bundle.js" type="text/javascript"></script>
+    <!-- <script src="./compiled/paredit-cm.js"></script> -->
+    <script src="./js/keymap-paredit-cm.js"></script>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+      border: 1px solid #ddd;
+      text-decoration: none;
+    }
+   th:nth-child(odd) {
+     text-align: right;
+   }
+   tr:nth-child(odd) {
+     background-color: white;
+   }
+   tr:nth-child(even) {
+     background-color: #f5f5f5;
+   }
+   td:nth-child(even) {
+     font-family: monospace;
+     text-align: left;
+     border-right: 2px solid #333;
+   }
+   td:nth-child(odd) {
+     text-align: right;
+     border-left: 2px solid #333;
+    }
+  </style>
+  </head>
+  <body>
+    <div id="app">
+<h2>paredit-cm demo</h2>
+<p>Note: the keymap falls through to
+  CodeMirror's <code>emacs.js</code> keymap, so
+  CodeMirror's emacs demo page says this:</p>
+
+<blockquote cite="https://github.com/codemirror/CodeMirror/blob/master/demo/emacs.html">
+Because CodeMirror's internal API is quite different from Emacs,
+they are only a loose approximation of actual emacs bindings,
+though. Also <strong>note that a lot of browsers disallow certain keys from
+being captured.</strong> For example, Chrome blocks both Ctrl-W and Ctrl-N,
+with the result that idiomatic use of Emacs keys will constantly close
+your tab or open a new window.</blockquote>
+
+This was tested with Firefox and Google Chrome.
+
+<form><textarea id="cm" name="cm">
+; Conway's Game of Life, based on the work of:
+;; Laurent Petit https://gist.github.com/1200343
+;; Christophe Grand http://clj-me.cgrand.net/2011/08/19/conways-game-of-life
+
+(ns game-of-life)
+
+;; Core game of life's algorithm functions
+
+(defn neighbours
+  "Given a cell's coordinates, returns the coordinates of its neighbours."
+  [[x y]]
+  (for [dx [-1 0 1] dy (if (zero? dx) [-1 1] [-1 0 1])]
+    [(+ dx x) (+ dy y)]))
+
+(defn step
+  "Given a set of living cells, computes the new set of living cells."
+  [cells]
+  (set (for [[cell n] (frequencies (mapcat neighbours cells))
+             :when (or (= n 3) (and (= n 2) (cells cell)))]
+         cell)))
+
+;; Utility methods for displaying game on a text terminal
+
+(defn print-board
+  "Prints a board on *out*, representing a step in the game."
+  [board w h]
+  (doseq [x (range (inc w)) y (range (inc h))]
+    (if (= y 0) (print "\n"))
+    (print (if (board [x y]) "[X]" " . "))))
+
+(defn display-grids
+  "Prints a squence of boards on *out*, representing several steps."
+  [grids w h]
+  (doseq [board grids]
+    (print-board board w h)
+    (print "\n")))
+
+;; Launches an example board
+
+(def board #{[2 1] [2 2] [2 3]})
+
+(display-grids (take 3 (iterate step board)) 5 5)
+
+;; Let's play with characters
+(println \1 \a \# \\
+         \" \( \newline
+         \} \" \space
+         \tab \return \backspace
+         \u1000 \uAaAa \u9F9F)
+
+;; Let's play with numbers
+(+ 1 -1 1/2 -1/2 -0.5 0.5)
+
+</textarea></form>
+<h3>Features / Key Bindings</h3>
+
+<p>The Paredit keybindings are enabled by
+including <code><a href="./js/keymap-paredit-cm.js">js/keymap-paredit-cm.js</a></code>
+and setting the <code>keyMap</code> option
+to <code>"paredit_cm"</code>.</p>
+
+<table border="0">
+  <tr>
+    <th style="background-color: black; color: white;">Command</th>
+    <th style="background-color: black; color: white;">Shortcut</th>
+    <th style="background-color: black; color: white;">Command</th>
+    <th style="background-color: black; color: white;">Shortcut</th>
+  </tr>
+  <tr>
+    <td>Backward</td>
+    <td>Ctrl 1</td>
+    <td>Forward</td>
+    <td>Ctrl 2</td>
+  </tr>
+  <tr>
+    <td>Backward sexp</td>
+    <td>Ctrl 3</td>
+    <td>Forward sexp</td>
+    <td>Ctrl 4</td>
+  </tr>
+  <tr>
+    <td>Backward Up</td>
+    <td>Ctrl 5</td>
+    <td>Forward Up</td>
+    <td>Ctrl 6</td>
+  </tr>
+  <tr>
+    <td>Backward Down</td>
+    <td>Ctrl 7</td>
+    <td>Forward Down</td>
+    <td>Ctrl 8</td>
+  </tr>
+  <tr>
+    <td>Backward Barf</td>
+    <td>Shift Ctrl [</td>
+    <td>Forward Barf</td>
+    <td>Shift Ctrl ]</td>
+  </tr>
+  <tr>
+    <td>Backward Slurp</td>
+    <td>Shift Ctrl 9</td>
+    <td>Forward Slurp</td>
+    <td>Shift Ctrl 0</td>
+  </tr>
+</table>
+
+<table border="0">
+  <tr>
+    <th style="background-color: black; color: white;">Command</th>
+    <th style="background-color: black; color: white;">Shortcut</th>
+    <th style="background-color: black; color: white;">Command</th>
+    <th style="background-color: black; color: white;">Shortcut</th>
+    <th style="background-color: black; color: white;">Command</th>
+    <th style="background-color: black; color: white;">Shortcut</th>
+  </tr>
+  <tr>
+    <td>Splice Killing Backward</td>
+    <td>Shift Ctrl 1</td>
+    <td>Splice</td>
+    <td>Shift Ctrl 2</td>
+    <td>Splice Killing Forward</td>
+    <td>Shift Ctrl 3</td>
+  </tr>
+  <tr>
+    <td>Raise sexp</td>
+    <td>Shift Ctrl 4</td>
+    <td>Split sexp</td>
+    <td>Shift Ctrl 5</td>
+    <td>Join sexps</td>
+    <td>Shift Ctrl 6</td>
+  </tr>
+  <tr>
+    <td>Backward Kill Word</td>
+    <td>Ctrl 9</td>
+    <td>Kill</td>
+    <td>Ctrl 0</td>
+    <td>Forward Kill Word</td>
+    <td>Ctrl -</td>
+  </tr>
+  <tr>
+    <td>Indent Defun</td>
+    <td>Shift Ctrl \</td>
+    <td>Meta Double Quote</td>
+    <td>Shift Alt "</td>
+    <td>Comment DWIM</td>
+    <td>Shift Alt ;</td>
+  </tr>
+  <tr>
+    <td>Wrap round</td>
+    <td>Shift Ctrl 7</td>
+    <td>Close round and newline</td>
+    <td>Shift Alt 0</td>
+    <td>Trim Sexp</td>
+    <td>Ctrl \</td>
+  </tr>
+</table>
+
+<ul>
+  <li>Delimiters
+    <ul>
+      <li>Backspace and Delete handle these: () {} [] "" \</li>
+      <li>Delimiters are created in pairs except when inside a string or comment or when the next character is escaped: () {} [] ""</li>
+      <li>Typing a closing delimiter moves past it after deleting any whitespace at the end of the current list.</li>
+      <li>Typing a closing double quote at the end of a string exits it to the right.</li>
+    </ul>
+  </li>
+</ul>
+
+<script>
+  var textArea = document.getElementById("cm");
+  var editor = CodeMirror.fromTextArea(textArea,
+                                       {
+                                         lineNumbers: true,
+                                         keyMap: "paredit_cm"
+                                       });
+  textArea.myCodeMirrorInstance = editor;
+</script>
+
+<p><strong>MIME types defined:</strong> <code>text/x-clojure</code>.</p>
+    </div> <!-- end of app div -->
+  </body>
+</html>
